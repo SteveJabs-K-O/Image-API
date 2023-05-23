@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { Container, Card, Button, Modal } from 'react-bootstrap'
+import { fetchImages, fetchUserPhotos, search } from './api/unsplashAPI'
 import './app.css'
 
 export type Image = {
@@ -21,8 +22,6 @@ function App() {
     const [selectedImage, setSelectedImage] = useState<Image | null>(null)
     const [headerOpacity, setHeaderOpacity] = useState(1)
     const [random, setRandom] = useState(true)
-    const imgCount = 12
-    const ACCESS_KEY = 'jUUTdQf2BhiEUB5lrVGVArE_8OfRV-4SSOc1FZGIBOs'
 
     useEffect(() => {
         const handleScroll = () => {
@@ -39,42 +38,23 @@ function App() {
         }
     }, [])
 
-    const fetchImages = async () => {
-        try {
-            const response = await fetch(`https://api.unsplash.com/photos/random?client_id=${ACCESS_KEY}&count=${imgCount}`)
-            const data = await response.json()
-            console.log(data)
-            setImages(data)
-        } catch (error) {
-            console.error('Error fetching images:', error)
-        }
-    }
-
-    const fetchUserPhotos = async (username: string) => {
-        try {
-            const response = await fetch(`https://api.unsplash.com/users/${username}/photos?client_id=${ACCESS_KEY}`)
-            const data = await response.json()
-            console.log(data)
-            setImages(data)
-        } catch (error) {
-            console.error('Error fetching images:', error)
-        }
-    }
-
-    const search = async (word: string) => {
-        try {
-            const response = await fetch(`https://api.unsplash.com/search/photos?query=${word}&client_id=${ACCESS_KEY}&per_page=${imgCount}`);
-            const data = await response.json()
-            console.log(data.results)
-            setImages(data.results)
-        } catch (error) {
-            console.log('Error searching images:', error)
-        }
-    }
-
-    const handleRandomImage = () => {
-        fetchImages()
+    const handleRandomImage = async () => {
+        const data = await fetchImages()
+        setImages(data)
         setRandom(true)
+    }
+
+    const handleUserPhotos = async (username: string) => {
+        const data = await fetchUserPhotos(username)
+        setImages(data)
+        setRandom(false)
+        handleCloseModal()
+    }
+
+    const handleSearch = async () => {
+        const result = await search(input)
+        setImages(result)
+        setInput('')
     }
 
     const handleCardClick = (image: Image) => {
@@ -85,22 +65,19 @@ function App() {
         setSelectedImage(null)
     }
 
-    const handleSearch = () => {
-        
-        search(input)
-        setInput('')
-    }
-
-    const handleUserPhotos = (username: string) => {
-        console.log('handleUserCollection')
-        fetchUserPhotos(username)
-        setRandom(false)
-        handleCloseModal()
-    }
-
     useEffect(() => {
-        fetchImages()
-        setRandom(true)
+        const fetchData = async () => {
+            try {
+                const data = await fetchImages()
+                setImages(data)
+                setRandom(true)
+            } catch (error) {
+                console.error('Error fetching images:', error);
+                // Handle the error, show a message, or take any necessary actions
+            }
+        };
+      
+        fetchData()
     }, [])
 
     return (
@@ -123,10 +100,7 @@ function App() {
                             onChange={(e) => setInput(e.target.value)}
                             onClick={() => setHeaderOpacity(1)} 
                         />
-                        <Button 
-                            className='my-auto text-grey' 
-                            onClick={handleSearch}
-                        >   
+                        <Button className='my-auto text-grey' onClick={handleSearch}>   
                             Search
                         </Button>
                     </Container>
