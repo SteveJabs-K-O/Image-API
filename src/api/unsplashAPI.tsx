@@ -1,5 +1,5 @@
 
-const imgCount = 3
+const imgCount = 12
 const ACCESS_KEY = 'jUUTdQf2BhiEUB5lrVGVArE_8OfRV-4SSOc1FZGIBOs'
 
 const fetchImages = async () => {
